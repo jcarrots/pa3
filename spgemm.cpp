@@ -61,41 +61,32 @@ void spgemm_2d(int m, int p, int n,
             }
             MPI_Bcast(B_i.data(), B_count * sizeof(B[0]), MPI_BYTE, i, col_comm);
 
+        std::unordered_map<int, std::vector<std::pair<int, int>>> B_hash;
+        for (const auto& b : B_i) {
+            int brow = b.first.first;
+            int bcol = b.first.second;
+            int bval = b.second;
+            B_hash[brow].emplace_back(bcol, bval);
+        }
 
-            // Sort A_i and B_i by their join keys.
-            size_t i_ptr = 0, j_ptr = 0;
-            while (i_ptr < A_i.size() && j_ptr < B_i.size()) {
-                int a_col = A_i[i_ptr].first.second;
-                int b_row = B_i[j_ptr].first.first;
-                if (a_col < b_row) {
-                    ++i_ptr;
-                } else if (a_col > b_row) {
-                    ++j_ptr;
-                } else {
-                    // Match found: a_col == b_row.
-                    // You might need to loop over all matching values in one vector.
-                    // Process matching elements:
-                    for (size_t k = i_ptr; k < A_i.size() && A_i[k].first.second == a_col; ++k) {
-                        for (size_t l = j_ptr; l < B_i.size() && B_i[l].first.first == b_row; ++l) {
-                            int a_val = A_i[k].second;
-                            int b_val = B_i[l].second;
-                            int a_row = A_i[k].first.first;
-                            int b_col = B_i[l].first.second;
-                            std::pair<int, int> pos(a_row, b_col);
-                            if (local_C.find(pos) == local_C.end()) {
-                                local_C[pos] = times(a_val, b_val);
-                            } else {
-                                local_C[pos] = plus(local_C[pos], times(a_val, b_val));
-                            }
-                        }
-                    }
-                    // Advance pointers past this join key.
-                    while (i_ptr < A_i.size() && A_i[i_ptr].first.second == a_col) i_ptr++;
-                    while (j_ptr < B_i.size() && B_i[j_ptr].first.first == b_row) j_ptr++;
+        // Multiply A_i with hashed B_i
+        for (const auto& a : A_i) {
+            int arow = a.first.first;
+            int acol = a.first.second;
+            int aval = a.second;
+
+            auto it = B_hash.find(acol);
+            if (it != B_hash.end()) {
+                for (const auto& [bcol, bval] : it->second) {
+                    std::pair<int, int> pos(arow, bcol);
+                    int prod = times(aval, bval);
+                    if (local_C.find(pos) == local_C.end())
+                        local_C[pos] = prod;
+                    else
+                        local_C[pos] = plus(local_C[pos], prod);
                 }
             }
-
-        
+        }
     }
     C.clear();
     for (const auto &entry : local_C) {
