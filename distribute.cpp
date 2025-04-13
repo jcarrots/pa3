@@ -13,11 +13,11 @@ void distribute_matrix_2d(int m, int n, std::vector<std::pair<std::pair<int, int
                           int root, MPI_Comm comm_2d)
 {
     int rank, size,coords_rank[2];
-    MPI_Comm_rank(comm_2d,&rank)
-    MPI_Comm_size(comm_2d,&size)
+    MPI_Comm_rank(comm_2d,&rank);
+    MPI_Comm_size(comm_2d,&size);
 
     //find the dimension of the 2d topology
-    int gridsize=std::sqrt(size)
+    int gridsize=std::sqrt(size);
 
     int block_size_row = m/gridsize;
     int block_size_column = n/gridsize;
@@ -29,7 +29,7 @@ void distribute_matrix_2d(int m, int n, std::vector<std::pair<std::pair<int, int
         for (int i=0;i<size;i++){
             std::vector<std::pair<std::pair<int, int>, int>> send_buffer;
             
-            MPI_Cart_coords(comm_2d,i,2,coords_rank) //find the destination coordinates
+            MPI_Cart_coords(comm_2d,i,2,coords_rank); //find the destination coordinates
 
             //decide which block to send
             int row_start = block_size_row * coords_rank[0];
@@ -39,7 +39,7 @@ void distribute_matrix_2d(int m, int n, std::vector<std::pair<std::pair<int, int
 
             // 
             for (auto &elem: full_matrix){
-                int row=elem.first.firstl
+                int row=elem.first.first
                 int column=ele.first.seocnd;
                 if (row>=row_start && row<row_end & col>=col_start && col<col_end)
                 {
