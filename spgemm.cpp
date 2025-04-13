@@ -29,7 +29,7 @@ void spgemm_2d(int m, int p, int n,
     //grid dimension the same as the row_size
     for (int i=0;i<row_size;i++)
     {
-        std::vector<std::pair<std::pair<int,int>, int>> &A_i;
+        std::vector<std::pair<std::pair<int,int>, int>> A_i;
             if (row_rank==i)
             {
                 A_i=A;
@@ -45,7 +45,7 @@ void spgemm_2d(int m, int p, int n,
             MPI_Bcast(A_i.data(), A_count * sizeof(A[0]), MPI_BYTE, i, row_comm);
 
 
-            std::vector<std::pair<std::pair<int,int>, int>> &B_i;
+            std::vector<std::pair<std::pair<int,int>, int>> B_i;
             if (column_rank==i)
             {
                 B_i=B;
@@ -55,7 +55,7 @@ void spgemm_2d(int m, int p, int n,
             //bcast the size
             MPI_Bcast(&B_count, 1, MPI_INT, i, col_comm);
             
-            if (column_rank != k) {
+            if (column_rank != i) {
                 B_i.resize(A_count);
             }
             MPI_Bcast(B_i.data(), A_count * sizeof(A[0]), MPI_BYTE, i, col_comm);
