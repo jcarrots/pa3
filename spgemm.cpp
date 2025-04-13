@@ -59,24 +59,39 @@ void spgemm_2d(int m, int p, int n,
             if (column_rank != i) {
                 B_i.resize(B_count);
             }
-            MPI_Bcast(B_i.data(), B_count * sizeof(A[0]), MPI_BYTE, i, col_comm);
+            MPI_Bcast(B_i.data(), B_count * sizeof(B[0]), MPI_BYTE, i, col_comm);
 
-            for (const auto &a_entry : A_i) {
-                int a_row = a_entry.first.first;    // Global row index of A's entry
-                int a_col = a_entry.first.second;     // Global column index of A's entry
-                int a_val = a_entry.second;
-                for (const auto &b_entry : B_i) {
-                    int b_row = b_entry.first.first;  // Global row index of B's entry
-                    int b_col = b_entry.first.second;   // Global column index of B's entry
-                    int b_val = b_entry.second;
-                    if (a_col == b_row) { // Valid multiplication condition
-                        std::pair<int,int> pos(a_row, b_col);
-                        if (local_C.find(pos) == local_C.end()) {
-                            local_C[pos] = times(a_val, b_val);
-                        } else {
-                            local_C[pos] = plus(local_C[pos], times(a_val, b_val));
+
+            // Sort A_i and B_i by their join keys.
+            size_t i_ptr = 0, j_ptr = 0;
+            while (i_ptr < A_i.size() && j_ptr < B_i.size()) {
+                int a_col = A_i[i_ptr].first.second;
+                int b_row = B_i[j_ptr].first.first;
+                if (a_col < b_row) {
+                    ++i_ptr;
+                } else if (a_col > b_row) {
+                    ++j_ptr;
+                } else {
+                    // Match found: a_col == b_row.
+                    // You might need to loop over all matching values in one vector.
+                    // Process matching elements:
+                    for (size_t k = i_ptr; k < A_i.size() && A_i[k].first.second == a_col; ++k) {
+                        for (size_t l = j_ptr; l < B_i.size() && B_i[l].first.first == b_row; ++l) {
+                            int a_val = A_i[k].second;
+                            int b_val = B_i[l].second;
+                            int a_row = A_i[k].first.first;
+                            int b_col = B_i[l].first.second;
+                            std::pair<int, int> pos(a_row, b_col);
+                            if (local_C.find(pos) == local_C.end()) {
+                                local_C[pos] = times(a_val, b_val);
+                            } else {
+                                local_C[pos] = plus(local_C[pos], times(a_val, b_val));
+                            }
                         }
                     }
+                    // Advance pointers past this join key.
+                    while (i_ptr < A_i.size() && A_i[i_ptr].first.second == a_col) i_ptr++;
+                    while (j_ptr < B_i.size() && B_i[j_ptr].first.first == b_row) j_ptr++;
                 }
             }
 
