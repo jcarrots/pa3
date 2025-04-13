@@ -22,8 +22,7 @@ void spgemm_2d(int m, int p, int n,
     MPI_Comm_rank(column_comm,&column_rank);
     MPI_Comm_size(column_comm,&column_size);
 
-    int row_block_size= m/;
-    int column_block_size =n/ ;
+
 
     std::map<std::pair<int, int>, int> local_C;
 
@@ -40,7 +39,7 @@ void spgemm_2d(int m, int p, int n,
             //bcast the size
             MPI_Bcast(&A_count, 1, MPI_INT, i, row_comm);
             
-            if (col_rank != k) {
+            if (col_rank != i) {
                 A_i.resize(A_count);
             }
             MPI_Bcast(A_i.data(), A_count * sizeof(A[0]), MPI_BYTE, i, row_comm);
@@ -52,7 +51,7 @@ void spgemm_2d(int m, int p, int n,
                 B_i=B;
             }
 
-            int B_count = (col_rank == k) ? B_i.size() : 0; 
+            int B_count = (col_rank == i) ? B_i.size() : 0; 
             //bcast the size
             MPI_Bcast(&B_count, 1, MPI_INT, i, column_comm);
             
@@ -61,11 +60,11 @@ void spgemm_2d(int m, int p, int n,
             }
             MPI_Bcast(B_i.data(), A_count * sizeof(A[0]), MPI_BYTE, i, row_comm);
 
-            for (const auto &a_entry : A_k) {
+            for (const auto &a_entry : A_i) {
                 int a_row = a_entry.first.first;    // Global row index of A's entry
                 int a_col = a_entry.first.second;     // Global column index of A's entry
                 int a_val = a_entry.second;
-                for (const auto &b_entry : B_k) {
+                for (const auto &b_entry : B_i) {
                     int b_row = b_entry.first.first;  // Global row index of B's entry
                     int b_col = b_entry.first.second;   // Global column index of B's entry
                     int b_val = b_entry.second;
