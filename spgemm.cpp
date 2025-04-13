@@ -30,16 +30,16 @@ void spgemm_2d(int m, int p, int n,
     for (int i=0;i<row_size;i++)
     {
         std::vector<std::pair<std::pair<int,int>, int>> &A_i,
-            if (column_rank==i)
+            if (row_rank==i)
             {
                 A_i=A;
             }
 
-            int A_count = (col_rank == i) ? A_i.size() : 0; 
+            int A_count = (row_rank == i) ? A_i.size() : 0; 
             //bcast the size
             MPI_Bcast(&A_count, 1, MPI_INT, i, row_comm);
             
-            if (col_rank != i) {
+            if (row_rank != i) {
                 A_i.resize(A_count);
             }
             MPI_Bcast(A_i.data(), A_count * sizeof(A[0]), MPI_BYTE, i, row_comm);
@@ -53,12 +53,12 @@ void spgemm_2d(int m, int p, int n,
 
             int B_count = (column_rank == i) ? B_i.size() : 0; 
             //bcast the size
-            MPI_Bcast(&B_count, 1, MPI_INT, i, column_comm);
+            MPI_Bcast(&B_count, 1, MPI_INT, i, col_comm);
             
-            if (col_rank != k) {
+            if (column_rank != k) {
                 B_i.resize(A_count);
             }
-            MPI_Bcast(B_i.data(), A_count * sizeof(A[0]), MPI_BYTE, i, column_comm);
+            MPI_Bcast(B_i.data(), A_count * sizeof(A[0]), MPI_BYTE, i, col_comm);
 
             for (const auto &a_entry : A_i) {
                 int a_row = a_entry.first.first;    // Global row index of A's entry
