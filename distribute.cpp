@@ -25,7 +25,7 @@ void distribute_matrix_2d(int m, int n, std::vector<std::pair<std::pair<int, int
 
     if (rank==root)
     {
-        printf("Sending data");
+        printf("Sending data\n");
         // sending data from root to other ranks
         for (int i=0;i<size;i++){
             std::vector<std::pair<std::pair<int, int>, int>> send_buffer;
@@ -68,64 +68,6 @@ void distribute_matrix_2d(int m, int n, std::vector<std::pair<std::pair<int, int
             MPI_Recv(&recv_size, 1, MPI_INT, root, 0, comm_2d, MPI_STATUS_IGNORE);
             local_matrix.resize(recv_size);
             MPI_Recv(local_matrix.data(),recv_size*sizeof(local_matrix[0]),MPI_BYTE, root, 1, comm_2d, MPI_STATUS_IGNORE);
-        printf("%d Recieved data.", rank);
+        printf("%d Recieved data.\n", rank);
     }
-
-
-
-    
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        }
-
-
-    }
-
-
 }
