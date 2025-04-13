@@ -36,13 +36,13 @@ void distribute_matrix_2d(int m, int n, std::vector<std::pair<std::pair<int, int
             int row_start = block_size_row * coords_rank[0];
             int row_end= (coords_rank[0] == gridsize - 1) ? m : (row_start + block_size_row);
             int column_start = block_size_column*coords_rank[1];
-            int column_end = (coords_rank[1] == gridsize - 1) ? m : (column_start + block_size_column);
+            int column_end = (coords_rank[1] == gridsize - 1) ? n : (column_start + block_size_column);
 
             // 
             for (auto &elem: full_matrix){
                 int row=elem.first.first;
-                int column=elem.first.seocnd;
-                if (row>=row_start && row<row_end & column>=column_start && column<column_end)
+                int column=elem.first.second;
+                if ( row>=row_start && row < row_end && column>=column_start && column<column_end)
                 {
                     send_buffer.push_back(elem);
                 }
@@ -54,8 +54,8 @@ void distribute_matrix_2d(int m, int n, std::vector<std::pair<std::pair<int, int
             }
             else{
                 int buffer_size=send_buffer.size();
-                MPI_send(&buffer_size,1,MPI_INT,i,0,comm_2d);
-                MPI_send(send_buffer.data(),buffer_size*sizeof(send_buffer[0]),MPI_BYTE,i,1,comm_2d)
+                MPI_Send(&buffer_size,1,MPI_INT,i,0,comm_2d);
+                MPI_Send(send_buffer.data(),buffer_size*sizeof(send_buffer[0]),MPI_BYTE,i,1,comm_2d);
             }
             
         }
