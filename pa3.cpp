@@ -268,7 +268,6 @@ int main(int argc, char **argv)
     if (test_type == "spgemm") {
         distribute_matrix_2d(n, m, A_T_complete, A_T, 0, comm_2d);
     }
-    printf("Rank %d: done with distribution\n", rank);
     // Maybe we can free up some memory with this
     A_complete.clear();
     A_T_complete.clear();
@@ -285,7 +284,6 @@ int main(int argc, char **argv)
         apsp(std::max(m, n), A, computed_dist, row_comm, col_comm);
     }
 
-    printf("Rank %d: done with computation\n", rank);
     double time = MPI_Wtime() - start;
     double avg_time = 0.0;
     MPI_Reduce(&time, &avg_time, 1, MPI_DOUBLE, MPI_SUM, 0, MPI_COMM_WORLD);
